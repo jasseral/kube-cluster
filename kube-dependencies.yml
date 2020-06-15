@@ -1,0 +1,62 @@
+#Paso 3: Instalar las dependencias de Kubernetetes
+
+#Docker: un tiempo de ejecución de contenedores. Es el componente que ejecuta sus contenedores. La compatibilidad con otros tiempos de ejecución como rkt se encuentra en etapa de desarrollo activo en Kubernetes.
+#kubeadm: herramienta de CLI que instalará y configurará los distintos componentes de un clúster de forma estándar.
+#kubelet: servicio o programa del sistema que se ejecuta en todos los nodos y gestiona operaciones a nivel de nodo.
+#kubectl: una herramienta de CLI que se utiliza para emitir comandos al clúster a través de su servidor de API.
+
+#Instala Docker, el tiempo de ejecución del contenedor.
+#Paso 3
+#Instala apt-transport-https, que le permite añadir fuentes HTTPS externas a su lista de fuentes APT.
+#Añade la clave apt del repositorio de APT de Kubernetes para la verificación de claves.
+#Añade el repositorio de APT de Kubernetes a la lista de fuentes APT de sus servidores remotos.
+#Instala kubelet y kubeadm.
+
+#El segundo play consta de una única tarea que instala kubectl en su nodo maestro.
+
+
+
+- hosts: all
+  become: yes
+  tasks:
+   - name: install Docker
+     apt:
+       name: docker.io
+       state: present
+       update_cache: true
+
+   - name: install APT Transport HTTPS
+     apt:
+       name: apt-transport-https
+       state: present
+
+   - name: add Kubernetes apt-key
+     apt_key:
+       url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+       state: present
+
+   - name: add Kubernetes' APT repository
+     apt_repository:
+      repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+      state: present
+      filename: 'kubernetes'
+
+   - name: install kubelet
+     apt:
+       name: kubelet=1.14.0-00
+       state: present
+       update_cache: true
+
+   - name: install kubeadm
+     apt:
+       name: kubeadm=1.14.0-00
+       state: present
+
+- hosts: master
+  become: yes
+  tasks:
+   - name: install kubectl
+     apt:
+       name: kubectl=1.14.0-00
+       state: present
+       force: yes

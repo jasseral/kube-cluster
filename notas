@@ -1,0 +1,3 @@
+instance_ip_addr_master = 100.25.103.54
+instance_ip_addr_worker_1 = 54.157.141.21
+instance_ip_addr_worker_2 = 100.25.29.81

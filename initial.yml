@@ -1,0 +1,22 @@
+# Paso 2: Crear un usuario no root en todos los servidores remotos
+
+#Crea el usuario no root ubuntu.
+#Configura el archivo sudoers para permitir que el usuario de ubuntu ejecute comandos sudo sin un mensaje de contraseña.
+#Añade la clave pública de su máquina local (por lo general ~/.ssh/id_rsa.pub) a la lista de claves autorizadas del usuario ubuntu remoto. Esto le permitirá usar SSH en cada servidor como usuario ubuntu.
+
+- hosts: all
+  become: yes
+  tasks:
+    - name: create the 'operador' user
+      user: name=operador append=yes state=present createhome=yes shell=/bin/bash
+
+    - name: allow 'operador' to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        line: 'operador ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+
+    - name: set up authorized keys for the operador user
+      authorized_key: user=operador key="{{item}}"
+      with_file:
+        - ~/.ssh/aws.pub

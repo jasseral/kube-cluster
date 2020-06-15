@@ -1,0 +1,37 @@
+#Paso 4: Configurar el nodo maestro
+#La primera tarea inicia el clúster ejecutando kubeadm init. Pasar el argumento --pod-network-cidr=10.244.0.0/16 especifica la subred privada desde la cual se asignarán los IP del pod. Flannel utiliza la subred anterior por defecto; le indicaremos a kubeadm que use la misma subred.
+#La segunda tarea crea un directorio .kube en /home/ubuntu. En este directorio se almacenarán datos de configuración, como los archivos de claves de administrador que se necesitan para establecer conexión con el clúster, y la dirección API del clúster.
+#La tercera tarea copia el archivo /etc/kubernetes/admin.conf que se generó desde kubeadm init al directorio principal de su usuario no root. Esto le permitirá usar kubectl para acceder al clúster recién creado.
+#La última tarea ejecuta kubectl apply para instalar Flannel. kubectl apply -f descriptor.[yml|json]​​​​​​ es la sintaxis para indicar a ​​​kubectl​​​​​​ que cree los objetos descritos en ​​​​​​el archivo descriptor.[yml|json]​​​​​. El archivo kube-flannel.yml contiene las descripciones de los objetos necesarios para configurar Flannel en el clúster.
+
+- hosts: master
+  become: yes
+  tasks:
+    - name: initialize the cluster
+      shell: kubeadm init --pod-network-cidr=10.244.0.0/16 >> cluster_initialized.txt
+      args:
+        chdir: $HOME
+        creates: cluster_initialized.txt
+
+    - name: create .kube directory
+      become: yes
+      become_user: operador
+      file:
+        path: $HOME/.kube
+        state: directory
+        mode: 0755
+
+    - name: copy admin.conf to user's kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/operador/.kube/config
+        remote_src: yes
+        owner: operador
+
+    - name: install Pod network
+      become: yes
+      become_user: operador
+      shell: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/a70459be0084506e4ec919aa1c114638878db11b/Documentation/kube-flannel.yml >> pod_network_setup.txt
+      args:
+        chdir: $HOME
+        creates: pod_network_setup.txt
